@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindGuard – Prototipo App</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --teal:    #0EB5A0;
+    --teal-d:  #0A8A79;
+    --teal-l:  #E0FAF7;
+    --navy:    #0D2340;
+    --navy-m:  #163354;
+    --green:   #2ECC71;
+    --yellow:  #F4C430;
+    --red:     #E74C3C;
+    --slate:   #F4F8FC;
+    --card:    #FFFFFF;
+    --text:    #1A2E44;
+    --muted:   #7A90A8;
+    --radius:  18px;
+    --shadow:  0 8px 32px rgba(13,35,64,0.13);
+  }
+
+  body {
+    background: linear-gradient(135deg, #0D2340 0%, #163354 40%, #0EB5A0 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 30px 16px 60px;
+    font-family: 'Nunito', sans-serif;
+  }
+
+  /* ── PAGE TITLE ── */
+  .page-title {
+    color: #fff;
+    font-family: 'Sora', sans-serif;
+    font-size: 13px;
+    font-weight: 300;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    opacity: .75;
+  }
+  .page-subtitle {
+    color: #fff;
+    font-family: 'Sora', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 28px;
+    text-align: center;
+  }
+
+  /* ── PHONE SHELL ── */
+  .phone {
+    width: 375px;
+    max-width: 100%;
+    background: var(--slate);
+    border-radius: 44px;
+    box-shadow: 0 24px 80px rgba(0,0,0,.45), inset 0 0 0 2px rgba(255,255,255,.08);
+    overflow: hidden;
+    position: relative;
+    border: 2px solid rgba(255,255,255,.12);
+  }
+
+  /* notch */
+  .notch {
+    background: #0D2340;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding-top: 6px;
+  }
+  .notch-pill {
+    width: 80px; height: 10px;
+    background: #000;
+    border-radius: 20px;
+  }
+
+  /* ── SCREENS CONTAINER ── */
+  .screens {
+    position: relative;
+    overflow: hidden;
+  }
+  .screen {
+    display: none;
+    flex-direction: column;
+    min-height: 720px;
+    animation: fadeIn .3s ease;
+  }
+  .screen.active { display: flex; }
+  @keyframes fadeIn { from { opacity:0; transform:translateX(12px); } to { opacity:1; transform:none; } }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    background: linear-gradient(135deg, var(--navy), var(--navy-m));
+    padding: 16px 20px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #fff;
+  }
+  .topbar-logo {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .topbar-logo .logo-icon {
+    width: 32px; height: 32px;
+    background: var(--teal);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .topbar-logo .logo-text {
+    font-family: 'Sora', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+  }
+  .topbar-logo .logo-text span { color: var(--teal); }
+  .avatar {
+    width: 34px; height: 34px;
+    background: linear-gradient(135deg, var(--teal), #0A8A79);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 800; color: #fff;
+    border: 2px solid rgba(255,255,255,.25);
+  }
+
+  /* ── BOTTOM NAV ── */
+  .bottom-nav {
+    background: var(--navy);
+    display: flex;
+    border-top: 1px solid rgba(255,255,255,.07);
+    padding: 8px 0 12px;
+  }
+  .nav-item {
+    flex: 1;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    cursor: pointer;
+    padding: 4px 0;
+    transition: all .2s;
+  }
+  .nav-item .nav-icon { font-size: 20px; }
+  .nav-item .nav-label {
+    font-size: 10px; font-weight: 700;
+    color: var(--muted);
+    letter-spacing: .5px;
+  }
+  .nav-item.active .nav-label { color: var(--teal); }
+  .nav-item.active .nav-icon { filter: drop-shadow(0 0 6px var(--teal)); }
+
+  /* ── SCROLL AREA ── */
+  .scroll-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 18px 16px;
+    background: var(--slate);
+    scrollbar-width: none;
+  }
+  .scroll-area::-webkit-scrollbar { display: none; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+  }
+  .card-title {
+    font-size: 11px; font-weight: 800;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  /* ── WELCOME STRIP ── */
+  .welcome-strip {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-m) 60%, #1A5276 100%);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 14px;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+  }
+  .welcome-strip::after {
+    content: '🧠';
+    position: absolute; right: 18px; top: 50%; transform: translateY(-50%);
+    font-size: 44px; opacity: .18;
+  }
+  .welcome-strip .greet {
+    font-size: 12px; font-weight: 600; color: var(--teal); letter-spacing: 1px; text-transform: uppercase;
+  }
+  .welcome-strip h2 { font-size: 19px; font-weight: 900; margin: 3px 0 6px; }
+  .welcome-strip p { font-size: 12px; opacity: .7; }
+
+  /* ── SEMAFORO CARD ── */
+  .semaforo-main {
+    display: flex; align-items: center; gap: 16px;
+  }
+  .semaforo-light {
+    width: 64px; height: 64px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+    flex-shrink: 0;
+    box-shadow: 0 0 20px currentColor;
+  }
+  .semaforo-light.green { background: #d4f5e4; color: var(--green); box-shadow: 0 0 18px rgba(46,204,113,.35); }
+  .semaforo-light.yellow { background: #fff8dc; color: var(--yellow); box-shadow: 0 0 18px rgba(244,196,48,.35); }
+  .semaforo-light.red { background: #fdecea; color: var(--red); box-shadow: 0 0 18px rgba(231,76,60,.35); }
+
+  .semaforo-info h3 { font-size: 18px; font-weight: 900; }
+  .semaforo-info .sem-estado {
+    font-size: 12px; color: var(--muted); font-weight: 600; margin-top: 2px;
+  }
+  .sem-badge {
+    display: inline-block; margin-top: 6px;
+    padding: 3px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 800; letter-spacing: .5px;
+  }
+  .sem-badge.green { background: #d4f5e4; color: #1a8a47; }
+  .sem-badge.yellow { background: #fff3cd; color: #a07800; }
+  .sem-badge.red { background: #fdecea; color: #a93226; }
+
+  /* ── PROGRESS BARS ── */
+  .metric { margin-bottom: 14px; }
+  .metric:last-child { margin-bottom: 0; }
+  .metric-head { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .metric-label { font-size: 13px; font-weight: 700; color: var(--text); }
+  .metric-val { font-size: 13px; font-weight: 800; }
+  .metric-val.low { color: var(--green); }
+  .metric-val.mid { color: var(--yellow); }
+  .metric-val.high { color: var(--red); }
+  .bar-bg { background: #EEF2F7; border-radius: 99px; height: 8px; overflow: hidden; }
+  .bar-fill {
+    height: 100%; border-radius: 99px;
+    transition: width .8s cubic-bezier(.4,0,.2,1);
+  }
+  .bar-fill.low  { background: linear-gradient(90deg, #2ECC71, #27ae60); }
+  .bar-fill.mid  { background: linear-gradient(90deg, #F4C430, #e67e22); }
+  .bar-fill.high { background: linear-gradient(90deg, #E74C3C, #c0392b); }
+
+  /* ── ALERTS ── */
+  .alert-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    margin-bottom: 8px;
+    font-size: 13px; font-weight: 600;
+  }
+  .alert-item:last-child { margin-bottom: 0; }
+  .alert-item.info  { background: #EBF5FB; color: #2471a3; }
+  .alert-item.warn  { background: #fff8e1; color: #a07800; }
+  .alert-item.ok    { background: #e8f8f5; color: #1a8a5a; }
+  .alert-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .alert-dot.info  { background: #2471a3; }
+  .alert-dot.warn  { background: var(--yellow); }
+  .alert-dot.ok    { background: var(--green); }
+
+  /* ── MINI CHART ── */
+  .chart-area {
+    display: flex; align-items: flex-end; gap: 5px;
+    height: 60px; padding-top: 10px;
+  }
+  .bar-col { flex: 1; border-radius: 6px 6px 0 0; transition: height .6s ease; }
+  .chart-labels { display: flex; gap: 5px; margin-top: 5px; }
+  .chart-labels span { flex: 1; text-align: center; font-size: 10px; color: var(--muted); font-weight: 700; }
+
+  /* ── SEMAFORO SCREEN ── */
+  .sem-full-card {
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 12px;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 8px; text-align: center;
+    transition: transform .2s;
+    cursor: pointer;
+  }
+  .sem-full-card:hover { transform: scale(1.02); }
+  .sem-full-card .sem-emoji { font-size: 40px; }
+  .sem-full-card .sem-level { font-size: 16px; font-weight: 900; }
+  .sem-full-card .sem-desc { font-size: 12px; opacity: .75; font-weight: 600; }
+  .sem-full-card.green { background: linear-gradient(135deg, #d4f5e4, #a9dfbf); }
+  .sem-full-card.yellow { background: linear-gradient(135deg, #fef9e7, #fdebd0); }
+  .sem-full-card.red { background: linear-gradient(135deg, #fdecea, #fadbd8); }
+  .sem-full-card.active-card { box-shadow: 0 0 0 3px var(--teal), var(--shadow); }
+
+  .var-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 0; border-bottom: 1px solid #EEF2F7;
+    font-size: 13px;
+  }
+  .var-row:last-child { border-bottom: none; }
+  .var-name { font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 6px; }
+  .var-chip {
+    font-size: 11px; font-weight: 800; padding: 3px 9px; border-radius: 20px;
+  }
+  .var-chip.low  { background: #d4f5e4; color: #1a8a47; }
+  .var-chip.mid  { background: #fff3cd; color: #a07800; }
+
+  /* ── CHATBOT SCREEN ── */
+  .chat-messages {
+    display: flex; flex-direction: column; gap: 12px;
+    padding: 16px; flex: 1;
+    background: var(--slate);
+    min-height: 500px;
+  }
+  .msg { display: flex; gap: 8px; max-width: 85%; animation: fadeIn .3s ease; }
+  .msg.bot { align-self: flex-start; }
+  .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+  .bot-avatar {
+    width: 32px; height: 32px; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--teal), var(--teal-d));
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+  .bubble {
+    padding: 10px 14px; border-radius: 18px;
+    font-size: 13px; font-weight: 600; line-height: 1.5;
+  }
+  .msg.bot .bubble {
+    background: #fff; color: var(--text);
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+  }
+  .msg.user .bubble {
+    background: linear-gradient(135deg, var(--teal), var(--teal-d));
+    color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+  .msg-time { font-size: 10px; color: var(--muted); margin-top: 3px; font-weight: 600; }
+
+  .phq-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .phq-chip {
+    padding: 6px 12px; border-radius: 20px;
+    background: #EEF2F7; border: 2px solid transparent;
+    font-size: 12px; font-weight: 700; color: var(--text);
+    cursor: pointer; transition: all .2s;
+  }
+  .phq-chip:hover, .phq-chip.sel {
+    background: var(--teal-l); border-color: var(--teal); color: var(--teal-d);
+  }
+
+  .chat-input-bar {
+    display: flex; gap: 8px; padding: 10px 14px 14px;
+    background: #fff; border-top: 1px solid #EEF2F7;
+  }
+  .chat-input {
+    flex: 1; padding: 10px 14px; border-radius: 24px;
+    border: 2px solid #EEF2F7; font-size: 13px; font-family: 'Nunito', sans-serif;
+    outline: none; background: var(--slate); color: var(--text);
+    font-weight: 600;
+  }
+  .chat-input:focus { border-color: var(--teal); }
+  .send-btn {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--teal), var(--teal-d));
+    border: none; cursor: pointer; font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: transform .2s;
+  }
+  .send-btn:hover { transform: scale(1.1); }
+
+  /* ── REPORTES SCREEN ── */
+  .stat-row { display: flex; gap: 10px; margin-bottom: 14px; }
+  .stat-box {
+    flex: 1; background: var(--card); border-radius: 14px;
+    padding: 14px 12px; text-align: center;
+    box-shadow: var(--shadow);
+  }
+  .stat-box .stat-num { font-size: 24px; font-weight: 900; color: var(--navy); }
+  .stat-box .stat-lbl { font-size: 11px; color: var(--muted); font-weight: 700; margin-top: 2px; }
+  .stat-box .stat-icon { font-size: 20px; margin-bottom: 4px; }
+
+  .big-chart { display: flex; align-items: flex-end; gap: 4px; height: 80px; margin: 8px 0; }
+  .bc-col { flex: 1; border-radius: 6px 6px 0 0; }
+
+  .recom-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 12px; background: var(--slate); border-radius: 12px;
+    margin-bottom: 8px;
+  }
+  .recom-icon { font-size: 20px; flex-shrink: 0; }
+  .recom-title { font-size: 13px; font-weight: 800; color: var(--text); }
+  .recom-desc  { font-size: 11px; color: var(--muted); font-weight: 600; margin-top: 2px; }
+
+  /* ── TABS LABEL ── */
+  .screen-label {
+    font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+    font-weight: 800; color: var(--muted);
+    padding: 14px 16px 0;
+  }
+  .screen-heading {
+    font-size: 22px; font-weight: 900; color: var(--navy);
+    padding: 4px 16px 14px;
+    font-family: 'Sora', sans-serif;
+  }
+
+  /* ── LEGEND ── */
+  .legend {
+    margin-top: 22px;
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
+    max-width: 375px;
+  }
+  .legend-item {
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 20px; padding: 6px 14px;
+    color: #fff; font-size: 11px; font-weight: 700;
+    letter-spacing: .5px;
+    cursor: pointer; transition: background .2s;
+  }
+  .legend-item:hover, .legend-item.active { background: rgba(14,181,160,.35); border-color: var(--teal); }
+
+  /* typing dots */
+  .typing { display: flex; gap: 4px; align-items: center; padding: 4px 0; }
+  .typing span {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--muted);
+    animation: bounce .9s infinite;
+  }
+  .typing span:nth-child(2) { animation-delay: .15s; }
+  .typing span:nth-child(3) { animation-delay: .3s; }
+  @keyframes bounce {
+    0%,80%,100% { transform: translateY(0); }
+    40% { transform: translateY(-6px); }
+  }
+</style>
+</head>
+<body>
+
+<p class="page-title">Prototipo Interactivo</p>
+<h1 class="page-subtitle">MindGuard – APP de Salud Mental Adolescente</h1>
+
+<!-- PHONE -->
+<div class="phone">
+  <div class="notch"><div class="notch-pill"></div></div>
+
+  <!-- ════════════════ SCREEN 1: DASHBOARD ════════════════ -->
+  <div class="screen active" id="screen-home">
+    <div class="topbar">
+      <div class="topbar-logo">
+        <div class="logo-icon">🧠</div>
+        <div class="logo-text">Mind<span>Guard</span></div>
+      </div>
+      <div class="avatar">SC</div>
+    </div>
+
+    <div class="scroll-area">
+      <!-- welcome -->
+      <div class="welcome-strip">
+        <div class="greet">Buenos días</div>
+        <h2>Shirley, ¿cómo te sientes hoy?</h2>
+        <p>Último reporte: hace 2 horas · Todo bajo control</p>
+      </div>
+
+      <!-- semáforo rápido -->
+      <div class="card">
+        <div class="card-title">Estado emocional actual</div>
+        <div class="semaforo-main">
+          <div class="semaforo-light green">😊</div>
+          <div class="semaforo-info">
+            <h3 style="color:#1a8a47">VERDE</h3>
+            <div class="sem-estado">Emociones estables y lenguaje positivo</div>
+            <span class="sem-badge green">✓ Riesgo Bajo</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- métricas PHQ-9 / GAD-7 -->
+      <div class="card">
+        <div class="card-title">Indicadores clínicos</div>
+        <div class="metric">
+          <div class="metric-head">
+            <span class="metric-label">Nivel depresión</span>
+            <span class="metric-val low">35%</span>
+          </div>
+          <div class="bar-bg"><div class="bar-fill low" style="width:35%"></div></div>
+        </div>
+        <div class="metric">
+          <div class="metric-head">
+            <span class="metric-label">Nivel ansiedad</span>
+            <span class="metric-val mid">45%</span>
+          </div>
+          <div class="bar-bg"><div class="bar-fill mid" style="width:45%"></div></div>
+        </div>
+        <div class="metric">
+          <div class="metric-head">
+            <span class="metric-label">Aislamiento social</span>
+            <span class="metric-val low">20%</span>
+          </div>
+          <div class="bar-bg"><div class="bar-fill low" style="width:20%"></div></div>
+        </div>
+      </div>
+
+      <!-- alertas -->
+      <div class="card">
+        <div class="card-title">Alertas recientes</div>
+        <div class="alert-item warn">
+          <div class="alert-dot warn"></div>
+          Cambios de humor detectados hoy
+        </div>
+        <div class="alert-item info">
+          <div class="alert-dot info"></div>
+          Lenguaje asociado a estrés escolar
+        </div>
+        <div class="alert-item ok">
+          <div class="alert-dot ok"></div>
+          Bajo riesgo emocional general
+        </div>
+      </div>
+
+      <!-- historial semanal -->
+      <div class="card">
+        <div class="card-title">Historial semanal</div>
+        <div class="chart-area">
+          <div class="bar-col" style="height:55%;background:#a9dfbf;border-radius:6px 6px 0 0"></div>
+          <div class="bar-col" style="height:70%;background:#82d6bf;border-radius:6px 6px 0 0"></div>
+          <div class="bar-col" style="height:40%;background:#f9e79f;border-radius:6px 6px 0 0"></div>
+          <div class="bar-col" style="height:80%;background:#a9dfbf;border-radius:6px 6px 0 0"></div>
+          <div class="bar-col" style="height:60%;background:#82d6bf;border-radius:6px 6px 0 0"></div>
+          <div class="bar-col" style="height:90%;background:#0EB5A0;border-radius:6px 6px 0 0"></div>
+          <div class="bar-col" style="height:75%;background:#0EB5A0;border-radius:6px 6px 0 0"></div>
+        </div>
+        <div class="chart-labels">
+          <span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- bottom nav -->
+    <div class="bottom-nav">
+      <div class="nav-item active" onclick="goTo('home')">
+        <span class="nav-icon">🏠</span><span class="nav-label">Inicio</span>
+      </div>
+      <div class="nav-item" onclick="goTo('chat')">
+        <span class="nav-icon">💬</span><span class="nav-label">Chatbot</span>
+      </div>
+      <div class="nav-item" onclick="goTo('semaforo')">
+        <span class="nav-icon">🚦</span><span class="nav-label">Semáforo</span>
+      </div>
+      <div class="nav-item" onclick="goTo('reportes')">
+        <span class="nav-icon">📊</span><span class="nav-label">Reportes</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════ SCREEN 2: CHATBOT ════════════════ -->
+  <div class="screen" id="screen-chat">
+    <div class="topbar">
+      <div class="topbar-logo">
+        <div class="logo-icon">💬</div>
+        <div class="logo-text" style="font-size:15px">Asistente <span>PLN</span></div>
+      </div>
+      <div style="font-size:11px;color:var(--teal);font-weight:800;">● En línea</div>
+    </div>
+
+    <div class="chat-messages" id="chat-messages">
+      <!-- mensaje bot inicial -->
+      <div class="msg bot">
+        <div class="bot-avatar">🧠</div>
+        <div>
+          <div class="bubble">Hola Shirley 👋 Soy tu asistente de bienestar emocional. ¿Cómo te has sentido hoy?</div>
+          <div class="msg-time">10:02 a.m.</div>
+        </div>
+      </div>
+      <div class="msg bot">
+        <div class="bot-avatar">🧠</div>
+        <div>
+          <div class="bubble">
+            Selecciona cómo describirías tu estado de ánimo en este momento:
+            <div class="phq-chips">
+              <span class="phq-chip" onclick="selectChip(this,'😊 Bien')">😊 Bien</span>
+              <span class="phq-chip" onclick="selectChip(this,'😐 Regular')">😐 Regular</span>
+              <span class="phq-chip" onclick="selectChip(this,'😟 Triste')">😟 Triste</span>
+              <span class="phq-chip" onclick="selectChip(this,'😰 Ansioso/a')">😰 Ansioso/a</span>
+            </div>
+          </div>
+          <div class="msg-time">10:02 a.m.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-input-bar">
+      <input class="chat-input" id="chat-input" placeholder="Escribe cómo te sientes…" onkeydown="if(event.key==='Enter')sendMsg()">
+      <button class="send-btn" onclick="sendMsg()">➤</button>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="goTo('home')">
+        <span class="nav-icon">🏠</span><span class="nav-label">Inicio</span>
+      </div>
+      <div class="nav-item active" onclick="goTo('chat')">
+        <span class="nav-icon">💬</span><span class="nav-label">Chatbot</span>
+      </div>
+      <div class="nav-item" onclick="goTo('semaforo')">
+        <span class="nav-icon">🚦</span><span class="nav-label">Semáforo</span>
+      </div>
+      <div class="nav-item" onclick="goTo('reportes')">
+        <span class="nav-icon">📊</span><span class="nav-label">Reportes</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════ SCREEN 3: SEMÁFORO ════════════════ -->
+  <div class="screen" id="screen-semaforo">
+    <div class="topbar">
+      <div class="topbar-logo">
+        <div class="logo-icon">🚦</div>
+        <div class="logo-text" style="font-size:15px">Semáforo <span>Emocional</span></div>
+      </div>
+    </div>
+
+    <div class="scroll-area">
+      <div class="screen-label">Nivel de Riesgo</div>
+      <div class="screen-heading">Estado Actual</div>
+
+      <div class="sem-full-card green active-card">
+        <div class="sem-emoji">🟢</div>
+        <div class="sem-level" style="color:#1a8a47">VERDE – Riesgo Bajo</div>
+        <div class="sem-desc">Emociones estables y lenguaje positivo detectado</div>
+        <span class="sem-badge green" style="margin-top:4px">✓ Estado actual de Shirley</span>
+      </div>
+
+      <div class="sem-full-card yellow">
+        <div class="sem-emoji">🟡</div>
+        <div class="sem-level" style="color:#a07800">AMARILLO – Riesgo Moderado</div>
+        <div class="sem-desc">Se detectan síntomas de ansiedad o tristeza moderada</div>
+      </div>
+
+      <div class="sem-full-card red">
+        <div class="sem-emoji">🔴</div>
+        <div class="sem-level" style="color:#a93226">ROJO – Riesgo Alto</div>
+        <div class="sem-desc">Posible crisis emocional o indicadores de ideación negativa</div>
+      </div>
+
+      <!-- variables analizadas -->
+      <div class="card">
+        <div class="card-title">Variables analizadas por el PLN</div>
+        <div class="var-row">
+          <div class="var-name">💬 Palabras negativas</div>
+          <span class="var-chip low">Bajo</span>
+        </div>
+        <div class="var-row">
+          <div class="var-name">😢 Expresiones de tristeza</div>
+          <span class="var-chip low">Bajo</span>
+        </div>
+        <div class="var-row">
+          <div class="var-name">😰 Patrones de ansiedad</div>
+          <span class="var-chip mid">Moderado</span>
+        </div>
+        <div class="var-row">
+          <div class="var-name">🚫 Aislamiento social</div>
+          <span class="var-chip low">Bajo</span>
+        </div>
+        <div class="var-row">
+          <div class="var-name">🌑 Desesperanza</div>
+          <span class="var-chip low">Bajo</span>
+        </div>
+        <div class="var-row">
+          <div class="var-name">🔄 Cambios emocionales</div>
+          <span class="var-chip mid">Moderado</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="goTo('home')">
+        <span class="nav-icon">🏠</span><span class="nav-label">Inicio</span>
+      </div>
+      <div class="nav-item" onclick="goTo('chat')">
+        <span class="nav-icon">💬</span><span class="nav-label">Chatbot</span>
+      </div>
+      <div class="nav-item active" onclick="goTo('semaforo')">
+        <span class="nav-icon">🚦</span><span class="nav-label">Semáforo</span>
+      </div>
+      <div class="nav-item" onclick="goTo('reportes')">
+        <span class="nav-icon">📊</span><span class="nav-label">Reportes</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════ SCREEN 4: REPORTES ════════════════ -->
+  <div class="screen" id="screen-reportes">
+    <div class="topbar">
+      <div class="topbar-logo">
+        <div class="logo-icon">📊</div>
+        <div class="logo-text" style="font-size:15px">Reportes <span>Emocionales</span></div>
+      </div>
+    </div>
+
+    <div class="scroll-area">
+      <div class="screen-label">Resumen del mes</div>
+      <div class="screen-heading">Mayo 2026</div>
+
+      <!-- stats row -->
+      <div class="stat-row">
+        <div class="stat-box">
+          <div class="stat-icon">📅</div>
+          <div class="stat-num" style="color:var(--teal)">24</div>
+          <div class="stat-lbl">Sesiones</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-icon">🟢</div>
+          <div class="stat-num" style="color:var(--green)">18</div>
+          <div class="stat-lbl">Días verdes</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-icon">🟡</div>
+          <div class="stat-num" style="color:var(--yellow)">5</div>
+          <div class="stat-lbl">Días amarillos</div>
+        </div>
+      </div>
+
+      <!-- evolución mensual -->
+      <div class="card">
+        <div class="card-title">Evolución emocional – Mayo</div>
+        <div class="big-chart">
+          <div class="bc-col" style="height:60%;background:#a9dfbf"></div>
+          <div class="bc-col" style="height:75%;background:#a9dfbf"></div>
+          <div class="bc-col" style="height:50%;background:#f9e79f"></div>
+          <div class="bc-col" style="height:80%;background:#a9dfbf"></div>
+          <div class="bc-col" style="height:45%;background:#f9e79f"></div>
+          <div class="bc-col" style="height:90%;background:#0EB5A0"></div>
+          <div class="bc-col" style="height:70%;background:#a9dfbf"></div>
+          <div class="bc-col" style="height:85%;background:#0EB5A0"></div>
+          <div class="bc-col" style="height:55%;background:#f9e79f"></div>
+          <div class="bc-col" style="height:95%;background:#0EB5A0"></div>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--muted)">
+            <div style="width:10px;height:10px;border-radius:3px;background:#0EB5A0"></div>Estable
+          </div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--muted)">
+            <div style="width:10px;height:10px;border-radius:3px;background:#f9e79f"></div>Moderado
+          </div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--muted)">
+            <div style="width:10px;height:10px;border-radius:3px;background:#fadbd8"></div>Alto riesgo
+          </div>
+        </div>
+      </div>
+
+      <!-- indicadores -->
+      <div class="card">
+        <div class="card-title">Indicadores de validación piloto</div>
+        <div class="metric" style="margin-bottom:14px">
+          <div class="metric-head">
+            <span class="metric-label">Usabilidad percibida</span>
+            <span class="metric-val low">82%</span>
+          </div>
+          <div class="bar-bg"><div class="bar-fill low" style="width:82%"></div></div>
+        </div>
+        <div class="metric" style="margin-bottom:14px">
+          <div class="metric-head">
+            <span class="metric-label">Precisión del chatbot</span>
+            <span class="metric-val low">78%</span>
+          </div>
+          <div class="bar-bg"><div class="bar-fill low" style="width:78%"></div></div>
+        </div>
+        <div class="metric" style="margin-bottom:14px">
+          <div class="metric-head">
+            <span class="metric-label">Comprensión del semáforo</span>
+            <span class="metric-val low">91%</span>
+          </div>
+          <div class="bar-bg"><div class="bar-fill low" style="width:91%"></div></div>
+        </div>
+        <div class="metric">
+          <div class="metric-head">
+            <span class="metric-label">Aceptación del usuario</span>
+            <span class="metric-val low">85%</span>
+          </div>
+          <div class="bar-bg"><div class="bar-fill low" style="width:85%"></div></div>
+        </div>
+      </div>
+
+      <!-- recomendaciones -->
+      <div class="card">
+        <div class="card-title">Recomendaciones para padres</div>
+        <div class="recom-item">
+          <div class="recom-icon">💬</div>
+          <div>
+            <div class="recom-title">Iniciar conversación empática</div>
+            <div class="recom-desc">Pregunta cómo le fue en el colegio sin presionar</div>
+          </div>
+        </div>
+        <div class="recom-item">
+          <div class="recom-icon">🏃</div>
+          <div>
+            <div class="recom-title">Promover actividad física</div>
+            <div class="recom-desc">30 min de ejercicio reduce ansiedad moderada</div>
+          </div>
+        </div>
+        <div class="recom-item">
+          <div class="recom-icon">📚</div>
+          <div>
+            <div class="recom-title">Consultar psico-orientador</div>
+            <div class="recom-desc">Si el nivel amarillo persiste más de 3 días</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="goTo('home')">
+        <span class="nav-icon">🏠</span><span class="nav-label">Inicio</span>
+      </div>
+      <div class="nav-item" onclick="goTo('chat')">
+        <span class="nav-icon">💬</span><span class="nav-label">Chatbot</span>
+      </div>
+      <div class="nav-item" onclick="goTo('semaforo')">
+        <span class="nav-icon">🚦</span><span class="nav-label">Semáforo</span>
+      </div>
+      <div class="nav-item active" onclick="goTo('reportes')">
+        <span class="nav-icon">📊</span><span class="nav-label">Reportes</span>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- end phone -->
+
+<!-- LEGEND TABS -->
+<div class="legend">
+  <div class="legend-item active" onclick="goTo('home');setActive(this)">🏠 Dashboard</div>
+  <div class="legend-item" onclick="goTo('chat');setActive(this)">💬 Chatbot PLN</div>
+  <div class="legend-item" onclick="goTo('semaforo');setActive(this)">🚦 Semáforo</div>
+  <div class="legend-item" onclick="goTo('reportes');setActive(this)">📊 Reportes</div>
+</div>
+
+<p style="color:rgba(255,255,255,.45);font-size:11px;margin-top:16px;letter-spacing:.5px;font-weight:600;text-align:center;">
+  Toca los botones del menú inferior · Prototipo basado en Anexos 1 y 2 del proyecto ACA 3
+</p>
+
+<script>
+const screens = { home:'screen-home', chat:'screen-chat', semaforo:'screen-semaforo', reportes:'screen-reportes' };
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(screens[id]).classList.add('active');
+}
+function setActive(el) {
+  document.querySelectorAll('.legend-item').forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ── CHATBOT LOGIC ──────────────────────────────────────────────────────────
+const responses = {
+  default: [
+    "Gracias por compartir eso conmigo. ¿Cuánto tiempo llevas sintiéndote así?",
+    "Entiendo. ¿Has podido hablar con alguien de confianza sobre esto?",
+    "Eso suena difícil. ¿Has dormido bien últimamente?",
+    "Recuerda que no estás sola. ¿Te gustaría que notificara a tus padres?",
+  ],
+  bien: ["¡Qué bueno saberlo! 😊 ¿Qué actividad te hizo sentir bien hoy?","Excelente. El semáforo registra tu estado como 🟢 VERDE."],
+  regular: ["Entiendo. ¿Quieres contarme más sobre qué te tiene así?","Normal sentirse regular. ¿Algo específico te está preocupando?"],
+  triste: ["Lamento escuchar eso. ¿Hace cuántos días te sientes así?","Tu bienestar importa. ¿Has podido hablar con alguien de confianza?"],
+  ansioso: ["La ansiedad puede ser agotadora. ¿Hay algo que la esté causando?","Intenta respirar profundo. ¿Quieres que activisemos el nivel 🟡 AMARILLO?"],
+};
+let msgCount = 0;
+function selectChip(el, text) {
+  el.classList.toggle('sel');
+  addUserMsg(text);
+  const key = text.includes('Bien') ? 'bien' : text.includes('Regular') ? 'regular' : text.includes('Triste') ? 'triste' : 'ansioso';
+  showTyping().then(() => addBotMsg(responses[key][Math.floor(Math.random()*responses[key].length)]));
+}
+function sendMsg() {
+  const inp = document.getElementById('chat-input');
+  const txt = inp.value.trim();
+  if (!txt) return;
+  addUserMsg(txt);
+  inp.value = '';
+  showTyping().then(() => addBotMsg(responses.default[msgCount % responses.default.length]));
+  msgCount++;
+}
+function addUserMsg(text) {
+  const c = document.getElementById('chat-messages');
+  const now = new Date();
+  const t = now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
+  c.innerHTML += `<div class="msg user"><div><div class="bubble">${text}</div><div class="msg-time" style="text-align:right">${t}</div></div></div>`;
+  c.scrollTop = c.scrollHeight;
+}
+function addBotMsg(text) {
+  const c = document.getElementById('chat-messages');
+  const now = new Date();
+  const t = now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
+  c.innerHTML += `<div class="msg bot"><div class="bot-avatar">🧠</div><div><div class="bubble">${text}</div><div class="msg-time">${t}</div></div></div>`;
+  c.scrollTop = c.scrollHeight;
+}
+function showTyping() {
+  return new Promise(res => {
+    const c = document.getElementById('chat-messages');
+    const id = 'typing-'+Date.now();
+    c.innerHTML += `<div class="msg bot" id="${id}"><div class="bot-avatar">🧠</div><div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div></div>`;
+    c.scrollTop = c.scrollHeight;
+    setTimeout(() => { const el = document.getElementById(id); if(el) el.remove(); res(); }, 1200);
+  });
+}
+</script>
+</body>
+</html>
