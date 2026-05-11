@@ -1,2 +1,2 @@
 # Mindguard
-prototipo aplicación 
+
